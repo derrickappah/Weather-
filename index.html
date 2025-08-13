@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="" />
+    <link
+      rel="stylesheet"
+      as="style"
+      onload="this.rel='stylesheet'"
+      href="https://fonts.googleapis.com/css2?display=swap&amp;family=Noto+Sans%3Awght%40400%3B500%3B700%3B900&amp;family=Space+Grotesk%3Awght%40400%3B500%3B700"
+    />
+    <title>Stitch Design</title>
+    <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64," />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  </head>
+  <body>
+    <div
+      class="relative flex size-full min-h-screen flex-col bg-[#111518] dark justify-between group/design-root overflow-x-hidden"
+      style='font-family: "Space Grotesk", "Noto Sans", sans-serif;'
+    >
+      <!-- Weather Screen -->
+      <div id="weather-screen" class="flex flex-col h-full">
+        <div class="flex items-center bg-[#111518] p-4 pb-2 justify-between">
+          <h2 class="text-white text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center pl-12">Weather</h2>
+          <div class="flex w-12 items-center justify-end">
+            <button id="unit-toggle" class="text-white text-sm font-medium leading-normal" onclick="toggleUnit()">°C</button>
+          </div>
+        </div>
+        <div class="px-4 py-3">
+          <label class="flex flex-col min-w-40 h-12 w-full">
+            <div class="flex w-full flex-1 items-stretch rounded-xl h-full">
+              <div
+                class="text-[#9dacb8] flex border-none bg-[#293138] items-center justify-center pl-4 rounded-l-xl border-r-0"
+                data-icon="MagnifyingGlass"
+                data-size="24px"
+                data-weight="regular"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                  <path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z"></path>
+                </svg>
+              </div>
+              <input
+                id="search-input"
+                placeholder="Search for a city or airport"
+                class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-white focus:outline-0 focus:ring-0 border-none bg-[#293138] focus:border-none h-full placeholder:text-[#9dacb8] px-4 rounded-l-none border-l-0 pl-2 text-base font-normal leading-normal"
+                value=""
+              />
+            </div>
+          </label>
+        </div>
+        <div id="error-message" class="px-4 text-red-500 text-sm hidden"></div>
+        <div class="p-4">
+          <div class="flex items-stretch justify-between gap-4 rounded-xl">
+            <div class="flex flex-col gap-1 flex-[2_2_0px]">
+              <p id="current-condition" class="text-[#9dacb8] text-sm font-normal leading-normal">Mostly Clear</p>
+              <p id="current-location" class="text-white text-base font-bold leading-tight">San Francisco 14°</p>
+              <p id="current-time" class="text-[#9dacb8] text-sm font-normal leading-normal">11:57PM</p>
+            </div>
+            <div
+              id="current-weather-image"
+              class="w-full bg-center bg-no-repeat aspect-video bg-cover rounded-xl flex-1 flex items-center justify-center bg-[#293138]"
+            ></div>
+          </div>
+        </div>
+        <div class="flex gap-3 p-3 overflow-x-hidden">
+          <div class="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-xl bg-[#293138] pl-4 pr-4 tab active" data-tab="today">
+            <p class="text-white text-sm font-medium leading-normal">Today</p>
+          </div>
+          <div class="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-xl bg-[#293138] pl-4 pr-4 tab" data-tab="tomorrow">
+            <p class="text-white text-sm font-medium leading-normal">Tomorrow</p>
+          </div>
+          <div class="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-xl bg-[#293138] pl-4 pr-4 tab" data-tab="week">
+            <p class="text-white text-sm font-medium leading-normal">Next 7 Days</p>
+          </div>
+        </div>
+        <div id="forecast-container" class="flex-1 overflow-y-auto">
+          <div id="today-forecast" class="forecast-section flex flex-col p-4 gap-3">
+            <!-- Hourly forecast items will be dynamically populated -->
+          </div>
+          <div id="tomorrow-forecast" class="forecast-section hidden flex flex-col p-4 gap-3">
+            <!-- Tomorrow's hourly forecast items will be dynamically populated -->
+          </div>
+          <div id="week-forecast" class="forecast-section hidden flex flex-col p-4 gap-3">
+            <!-- Weekly forecast items will be dynamically populated -->
+          </div>
+        </div>
+      </div>
+      <!-- Charts Screen -->
+      <div id="charts-screen" class="hidden">
+        <div class="flex items-center bg-[#111518] p-4 pb-2 justify-between">
+          <h2 class="text-white text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center pl-12">Weather Charts</h2>
+          <div class="flex w-12 items-center justify-end">
+            <button id="chart-unit-toggle" class="text-white text-sm font-medium leading-normal" onclick="toggleChartUnit()">°C</button>
+          </div>
+        </div>
+        <div class="flex gap-3 p-3 overflow-x-hidden">
+          <div class="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-xl bg-[#293138] pl-4 pr-4 chart-tab active" data-chart-tab="hourly">
+            <p class="text-white text-sm font-medium leading-normal">Hourly</p>
+          </div>
+          <div class="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-xl bg-[#293138] pl-4 pr-4 chart-tab" data-chart-tab="daily">
+            <p class="text-white text-sm font-medium leading-normal">Daily</p>
+          </div>
+        </div>
+        <div class="p-4">
+          <div id="hourly-chart-container" class="chart-section">
+            <canvas id="hourly-chart"></canvas>
+          </div>
+          <div id="daily-chart-container" class="chart-section hidden">
+            <canvas id="daily-chart"></canvas>
+          </div>
+        </div>
+      </div>
+      <!-- Navigation -->
+      <div class="fixed bottom-0 left-0 right-0">
+        <div class="flex gap-2 border-t border-[#293138] bg-[#1c2226] px-4 pb-3 pt-2">
+          <a class="just flex flex-1 flex-col items-center justify-end gap-1 rounded-full text-white nav-link active" href="#" data-page="home">
+            <div class="text-white flex h-8 items-center justify-center" data-icon="House" data-size="24px" data-weight="fill">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                <path
+                  d="M224,115.55V208a16,16,0,0,1-16,16H168a16,16,0,0,1-16-16V168a8,8,0,0,0-8-8H112a8,8,0,0,0-8,8v40a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V115.55a16,16,0,0,1,5.17-11.78l80-75.48.11-.11a16,16,0,0,1,21.53,0,1.14,1.14,0,0,0,.11.11l80,75.48A16,16,0,0,1,224,115.55Z"
+                ></path>
+              </svg>
+            </div>
+            <p class="text-white text-xs font-medium leading-normal tracking-[0.015em]">Home</p>
+          </a>
+          <a class="just flex flex-1 flex-col items-center justify-end gap-1 text-[#9dacb8] nav-link" href="#" data-page="charts">
+            <div class="text-[#9dacb8] flex h-8 items-center justify-center" data-icon="ChartLine" data-size="24px" data-weight="regular">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                <path
+                  d="M232,208a8,8,0,0,1-8,8H32a8,8,0,0,1-8-8V48a8,8,0,0,1,16,0v94.37L90.73,98a8,8,0,0,1,10.07-.38l58.81,44.11L218.73,90a8,8,0,0,1,10.54,12l-64,56a8,8,0,0,1-10.07.38L96.39,114.29,40,163.63V200H224A8,8,0,0,1,232,208Z"
+                ></path>
+              </svg>
+            </div>
+            <p class="text-[#9dacb8] text-xs font-medium leading-normal tracking-[0.015em]">Charts</p>
+          </a>
+        </div>
+        <div class="h-5 bg-[#1c2226]"></div>
+      </div>
+    </div>
+
+    <script>
+      let isCelsius = true;
+      let isChartCelsius = true;
+
+      // Weather code mapping for Open-Meteo
+      const weatherCodes = {
+        0: { description: 'Clear sky', main: 'Clear', icon: 'Sun' },
+        1: { description: 'Mainly clear', main: 'Clear', icon: 'Sun' },
+        2: { description: 'Partly cloudy', main: 'Clouds', icon: 'CloudSun' },
+        3: { description: 'Overcast', main: 'Clouds', icon: 'Cloud' },
+        45: { description: 'Fog', main: 'Fog', icon: 'CloudFog' },
+        48: { description: 'Depositing rime fog', main: 'Fog', icon: 'CloudFog' },
+        51: { description: 'Light drizzle', main: 'Drizzle', icon: 'CloudRain' },
+        53: { description: 'Moderate drizzle', main: 'Drizzle', icon: 'CloudRain' },
+        55: { description: 'Dense drizzle', main: 'Drizzle', icon: 'CloudRain' },
+        56: { description: 'Light freezing drizzle', main: 'Drizzle', icon: 'CloudRain' },
+        57: { description: 'Dense freezing drizzle', main: 'Drizzle', icon: 'CloudRain' },
+        61: { description: 'Slight rain', main: 'Rain', icon: 'CloudRain' },
+        63: { description: 'Moderate rain', main: 'Rain', icon: 'CloudRain' },
+        65: { description: 'Heavy rain', main: 'Rain', icon: 'CloudRain' },
+        66: { description: 'Light freezing rain', main: 'Rain', icon: 'CloudRain' },
+        67: { description: 'Heavy freezing rain', main: 'Rain', icon: 'CloudRain' },
+        71: { description: 'Slight snow fall', main: 'Snow', icon: 'CloudSnow' },
+        73: { description: 'Moderate snow fall', main: 'Snow', icon: 'CloudSnow' },
+        75: { description: 'Heavy snow fall', main: 'Snow', icon: 'CloudSnow' },
+        77: { description: 'Snow grains', main: 'Snow', icon: 'CloudSnow' },
+        80: { description: 'Slight rain showers', main: 'Rain', icon: 'CloudRain' },
+        81: { description: 'Moderate rain showers', main: 'Rain', icon: 'CloudRain' },
+        82: { description: 'Violent rain showers', main: 'Rain', icon: 'CloudRain' },
+        85: { description: 'Slight snow showers', main: 'Snow', icon: 'CloudSnow' },
+        86: { description: 'Heavy snow showers', main: 'Snow', icon: 'CloudSnow' },
+        95: { description: 'Thunderstorm', main: 'Thunderstorm', icon: 'CloudLightning' },
+        96: { description: 'Thunderstorm with slight hail', main: 'Thunderstorm', icon: 'CloudLightning' },
+        99: { description: 'Thunderstorm with heavy hail', main: 'Thunderstorm', icon: 'CloudLightning' }
+      };
+
+      // Function to get weather description and icon
+      function getWeatherInfo(code) {
+        return weatherCodes[code] || { description: 'Unknown', main: 'Clear', icon: 'Sun' };
+      }
+
+      // Function to convert temperature
+      function convertTemperature(temp) {
+        return isCelsius ? temp : (temp * 9/5) + 32;
+      }
+
+      // Function to get coordinates from city name using Open-Meteo Geocoding API
+      async function getCoordinates(city) {
+        try {
+          const response = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en&format=json`);
+          if (!response.ok) throw new Error('City not found');
+          const data = await response.json();
+          if (data.results && data.results.length > 0) {
+            return { latitude: data.results[0].latitude, longitude: data.results[0].longitude, name: data.results[0].name, timezone: data.results[0].timezone };
+          } else {
+            throw new Error('City not found');
+          }
+        } catch (error) {
+          showError(error.message);
+          return null;
+        }
+      }
+
+      // Function to fetch weather data from Open-Meteo by city
+      async function fetchWeather(city) {
+        const coords = await getCoordinates(city);
+        if (!coords) return null;
+
+        try {
+          const response = await fetch(
+            `https://api.open-meteo.com/v1/forecast?latitude=${coords.latitude}&longitude=${coords.longitude}&current=weather_code,temperature_2m&hourly=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=${encodeURIComponent(coords.timezone)}`
+          );
+          if (!response.ok) throw new Error('Failed to fetch weather data');
+          const data = await response.json();
+          return { current: data.current, hourly: data.hourly, daily: data.daily, name: coords.name, timezone: coords.timezone };
+        } catch (error) {
+          showError(error.message);
+          return null;
+        }
+      }
+
+      // Function to fetch weather data by current location
+      async function fetchWeatherByLocation(lat, lon) {
+        try {
+          // Get city name using Nominatim
+          const cityResponse = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`);
+          const cityData = await cityResponse.json();
+          const name = cityData.address?.city || cityData.address?.town || cityData.address?.village || 'Current Location';
+
+          // Use browser's timezone for current location
+          const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+          const response = await fetch(
+            `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=weather_code,temperature_2m&hourly=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=${encodeURIComponent(timezone)}`
+          );
+          if (!response.ok) throw new Error('Failed to fetch weather data');
+          const data = await response.json();
+          return { current: data.current, hourly: data.hourly, daily: data.daily, name: name, timezone: timezone };
+        } catch (error) {
+          showError(error.message);
+          return null;
+        }
+      }
+
+      // Function to show error message
+      function showError(message) {
+        const errorDiv = document.getElementById('error-message');
+        errorDiv.textContent = message;
+        errorDiv.classList.remove('hidden');
+        setTimeout(() => errorDiv.classList.add('hidden'), 5000);
+      }
+
+      // Function to update current weather
+      function updateCurrentWeather(data) {
+        const condition = document.getElementById('current-condition');
+        const location = document.getElementById('current-location');
+        const time = document.getElementById('current-time');
+        const image = document.getElementById('current-weather-image');
+
+        const weatherInfo = getWeatherInfo(data.current.weather_code);
+        condition.textContent = weatherInfo.description;
+        location.textContent = `${data.name} ${Math.round(convertTemperature(data.current.temperature_2m))}°${isCelsius ? 'C' : 'F'}`;
+        const currentDate = new Date();
+        time.textContent = currentDate.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+        image.innerHTML = `
+          <div class="text-white flex items-center justify-center h-full" data-icon="${weatherInfo.icon}" data-size="96px" data-weight="regular">
+            <svg xmlns="http://www.w3.org/2000/svg" width="96px" height="96px" fill="currentColor" viewBox="0 0 256 256">
+              <path d="${getWeatherIconPath(weatherInfo.icon)}"></path>
+            </svg>
+          </div>
+        `;
+      }
+
+      // Function to update hourly forecast (now vertical like weekly)
+      function updateHourlyForecast(data, containerId, isTomorrow = false) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = '';
+        const now = new Date();
+        const targetDay = isTomorrow ? new Date(now).setDate(now.getDate() + 1) : new Date(now);
+        const targetDate = new Date(targetDay);
+        const startIndex = (targetDate.getDate() - now.getDate() + (isTomorrow ? 1 : 0)) * 24 + now.getHours();
+
+        const hourlyData = data.hourly.temperature_2m.slice(startIndex, startIndex + 24).map((temp, i) => ({
+          time: new Date(data.hourly.time[startIndex + i]).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true }),
+          temp: convertTemperature(temp),
+          code: data.hourly.weather_code[startIndex + i]
+        }));
+
+        hourlyData.forEach(item => {
+          const weatherInfo = getWeatherInfo(item.code);
+          const hourDiv = document.createElement('div');
+          hourDiv.className = 'flex items-center gap-4 bg-[#111518] px-4 min-h-[72px] py-2';
+          hourDiv.innerHTML = `
+            <div class="text-white flex items-center justify-center rounded-lg bg-[#293138] shrink-0 size-12" data-icon="${weatherInfo.icon}" data-size="24px" data-weight="regular">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                <path d="${getWeatherIconPath(weatherInfo.icon)}"></path>
+              </svg>
+            </div>
+            <div class="flex flex-col justify-center">
+              <p class="text-white text-base font-medium leading-normal line-clamp-1">${item.time}</p>
+              <p class="text-[#9dacb8] text-sm font-normal leading-normal line-clamp-2">${Math.round(item.temp)}°${isCelsius ? 'C' : 'F'}</p>
+            </div>
+          `;
+          container.appendChild(hourDiv);
+        });
+      }
+
+      // Function to update weekly forecast
+      function updateWeeklyForecast(data) {
+        const container = document.getElementById('week-forecast');
+        container.innerHTML = '';
+
+        data.daily.time.forEach((time, index) => {
+          const dayDate = new Date(time);
+          const dayName = dayDate.toLocaleDateString('en-US', { weekday: 'long' });
+          const high = convertTemperature(data.daily.temperature_2m_max[index]);
+          const low = convertTemperature(data.daily.temperature_2m_min[index]);
+          const code = data.daily.weather_code[index];
+          const weatherInfo = getWeatherInfo(code);
+
+          const dayDiv = document.createElement('div');
+          dayDiv.className = 'flex items-center gap-4 bg-[#111518] px-4 min-h-[72px] py-2';
+          dayDiv.innerHTML = `
+            <div class="text-white flex items-center justify-center rounded-lg bg-[#293138] shrink-0 size-12" data-icon="${weatherInfo.icon}" data-size="24px" data-weight="regular">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                <path d="${getWeatherIconPath(weatherInfo.icon)}"></path>
+              </svg>
+            </div>
+            <div class="flex flex-col justify-center">
+              <p class="text-white text-base font-medium leading-normal line-clamp-1">${dayName}</p>
+              <p class="text-[#9dacb8] text-sm font-normal leading-normal line-clamp-2">High ${Math.round(high)}° Low ${Math.round(low)}°${isCelsius ? 'C' : 'F'}</p>
+            </div>
+          `;
+          container.appendChild(dayDiv);
+        });
+      }
+
+      // Helper function to get SVG path for weather icons
+      function getWeatherIconPath(icon) {
+        const paths = {
+          Sun: `M120,40V16a8,8,0,0,1,16,0V40a8,8,0,0,1-16,0Zm72,88a64,64,0,1,1-64-64A64.07,64.07,0,0,1,192,128Zm-16,0a48,48,0,1,0-48,48A48.05,48.05,0,0,0,176,128ZM58.34,69.66A8,8,0,0,0,69.66,58.34l-16-16A8,8,0,0,0,42.34,53.66Zm0,116.68-16,16a8,8,0,0,0,11.32,11.32l16-16a8,8,0,0,0-11.32-11.32ZM192,72a8,8,0,0,0,5.66-2.34l16-16a8,8,0,0,0-11.32-11.32l-16,16A8,8,0,0,0,192,72Zm5.66,114.34a8,8,0,0,0-11.32,11.32l16,16a8,8,0,0,0,11.32-11.32ZM48,128a8,8,0,0,0-8-8H16a8,8,0,0,0,0,16H40A8,8,0,0,0,48,128Zm80,80a8,8,0,0,0-8,8v24a8,8,0,0,0,16,0V216A8,8,0,0,0,128,208Zm112-88H216a8,8,0,0,0,0,16h24a8,8,0,0,0,0-16Z`,
+          Cloud: `M160,40A88.09,88.09,0,0,0,81.29,88.67,64,64,0,1,0,72,216h88a88,88,0,0,0,0-176Zm0,160H72a48,48,0,0,1,0-96c1.1,0,2.2,0,3.29.11A88,88,0,0,0,72,128a8,8,0,0,0,16,0,72,72,0,1,1,72,72Z`,
+          CloudSun: `M156,72a76.2,76.2,0,0,0-20.26,2.73,55.63,55.63,0,0,0-9.41-11.54l9.51-13.57a8,8,0,1,0-13.11-9.18L113.22,54A55.9,55.9,0,0,0,88,48c-.58,0-1.16,0-1.74,0L83.37,31.71a8,8,0,0,0-15.75,2.77L70.5,50.82A56.1,56.1,0,0,0,47.23,65.67L33.61,56.14a8,8,0,1,0-9.17,13.11L38,78.77A55.55,55.55,0,0,0,32,104c0,.57,0,1.15,0,1.72L15.71,108.6a8,8,0,0,0,1.38,15.88,8.24,8.24,0,0,0,1.39-.12l16.32-2.88a55.74,55.74,0,0,0,5.86,12.42A52,52,0,0,0,76,224h80a76,76,0,0,0,0-152ZM48,104a40,40,0,0,1,72.54-23.24,76.26,76.26,0,0,0-35.62,40,52.14,52.14,0,0,0-31,4.17A40,40,0,0,1,48,104ZM156,208H76a36,36,0,1,1,4.78-71.69c-.37,2.37-.63,4.79-.77,7.23a8,8,0,0,0,16,.92,58.91,58.91,0,0,1,1.88-11.81c0-.16.09-.32.12-.48A60.06,60.06,0,1,1,156,208Z`,
+          CloudFog: `M120,208H72a8,8,0,0,1,0-16h48a8,8,0,0,1,0,16Zm64-16H160a8,8,0,0,0,0,16h24a8,8,0,0,0,0-16Zm-24,32H104a8,8,0,0,0,0,16h56a8,8,0,0,0,0-16Zm72-124a76.08,76.08,0,0,1-76,76H76A52,52,0,0,1,76,72a53.26,53.26,0,0,1,8.92.76A76.08,76.08,0,0,1,232,100Zm-16,0A60.06,60.06,0,0,0,96,96.46a8,8,0,0,1-16-.92q.21-3.66.77-7.23A38.11,38.11,0,0,0,76,88a36,36,0,0,0,0,72h80A60.07,60.07,0,0,0,216,100Z`,
+          CloudRain: `M158.66,196.44l-32,48a8,8,0,1,1-13.32-8.88l32-48a8,8,0,0,1,13.32,8.88ZM232,92a76.08,76.08,0,0,1-76,76H132.28l-29.62,44.44a8,8,0,1,1-13.32-8.88L113.05,168H76A52,52,0,0,1,76,64a53.26,53.26,0,0,1,8.92.76A76.08,76.08,0,0,1,232,92Zm-16,0A60.06,60.06,0,0,0,96,88.46a8,8,0,0,1-16-.92q.21-3.66.77-7.23A38.11,38.11,0,0,0,76,80a36,36,0,0,0,0,72h80A60.07,60.07,0,0,0,216,92Z`,
+          CloudSnow: `M88,196a12,12,0,1,1-12-12A12,12,0,0,1,88,196Zm28,4a12,12,0,1,0,12,12A12,12,0,0,0,116,200Zm48-16a12,12,0,1,0,12,12A12,12,0,0,0,164,184ZM68,224a12,12,0,1,0,12,12A12,12,0,0,0,68,224Zm88,0a12,12,0,1,0,12,12A12,12,0,0,0,156,224ZM232,92a76.08,76.08,0,0,1-76,76H76A52,52,0,0,1,76,64a53.26,53.26,0,0,1,8.92.76A76.08,76.08,0,0,1,232,92Zm-16,0A60.06,60.06,0,0,0,96,88.46a8,8,0,0,1-16-.92q.21-3.66.77-7.23A38.11,38.11,0,0,0,76,80a36,36,0,0,0,0,72h80A60.07,60.07,0,0,0,216,92Z`,
+          CloudLightning: `M156,16A76.2,76.2,0,0,0,84.92,64.76,53.26,53.26,0,0,0,76,64a52,52,0,0,0,0,104h37.87L97.14,195.88A8,8,0,0,0,104,208h25.87l-16.73,27.88a8,8,0,0,0,13.72,8.24l24-40A8,8,0,0,0,144,192H118.13l14.4-24H156a76,76,0,0,0,0-152Zm0,136H76a36,36,0,0,1,0-72,38.11,38.11,0,0,1,4.78.31q-.56,3.57-.77,7.23a8,8,0,0,0,16,.92A60.06,60.06,0,1,1,156,152Z`
+        };
+        return paths[icon] || paths.Sun;
+      }
+
+      // Chart instances
+      let hourlyChart = null;
+      let dailyChart = null;
+
+      // Function to update hourly chart
+      function updateHourlyChart(data) {
+        const ctx = document.getElementById('hourly-chart').getContext('2d');
+        const now = new Date();
+        const startIndex = now.getHours();
+        const labels = data.hourly.time.slice(startIndex, startIndex + 12).map(time => 
+          new Date(time).toLocaleTimeString([], { hour: 'numeric', hour12: true })
+        );
+        const temperatures = data.hourly.temperature_2m.slice(startIndex, startIndex + 12).map(temp => Math.round(convertTemperature(temp)));
+
+        if (hourlyChart) {
+          hourlyChart.destroy();
+        }
+
+        hourlyChart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: `Temperature (°${isChartCelsius ? 'C' : 'F'})`,
+              data: temperatures,
+              borderColor: '#9dacb8',
+              backgroundColor: 'rgba(157, 172, 184, 0.2)',
+              fill: true,
+              tension: 0.4,
+              pointBackgroundColor: '#ffffff',
+              pointBorderColor: '#9dacb8'
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+              title: { display: true, text: `Hourly Temperature in ${data.name}`, color: '#ffffff', font: { size: 16 } }
+            },
+            scales: {
+              x: { ticks: { color: '#9dacb8' }, grid: { display: false } },
+              y: { ticks: { color: '#9dacb8' }, grid: { color: '#293138' } }
+            }
+          }
+        });
+      }
+
+      // Function to update daily chart
+      function updateDailyChart(data) {
+        const ctx = document.getElementById('daily-chart').getContext('2d');
+        const labels = data.daily.time.map(time => new Date(time).toLocaleDateString('en-US', { weekday: 'short' }));
+        const highs = data.daily.temperature_2m_max.map(temp => Math.round(convertTemperature(temp)));
+        const lows = data.daily.temperature_2m_min.map(temp => Math.round(temp));
+
+        if (dailyChart) {
+          dailyChart.destroy();
+        }
+
+        dailyChart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: `High (°${isChartCelsius ? 'C' : 'F'})`,
+                data: highs,
+                backgroundColor: '#9dacb8',
+                borderColor: '#9dacb8',
+                borderWidth: 1
+              },
+              {
+                label: `Low (°${isChartCelsius ? 'C' : 'F'})`,
+                data: lows,
+                backgroundColor: '#4b5e68',
+                borderColor: '#4b5e68',
+                borderWidth: 1
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: true, labels: { color: '#ffffff' } },
+              title: { display: true, text: `Daily High/Low in ${data.name}`, color: '#ffffff', font: { size: 16 } }
+            },
+            scales: {
+              x: { ticks: { color: '#9dacb8' }, grid: { display: false } },
+              y: { ticks: { color: '#9dacb8' }, grid: { color: '#293138' } }
+            }
+          }
+        });
+      }
+
+      // Toggle unit function
+      function toggleUnit() {
+        isCelsius = !isCelsius;
+        document.getElementById('unit-toggle').textContent = `°${isCelsius ? 'C' : 'F'}`;
+        updateWeatherDisplay();
+      }
+
+      // Toggle chart unit function
+      function toggleChartUnit() {
+        isChartCelsius = !isChartCelsius;
+        document.getElementById('chart-unit-toggle').textContent = `°${isChartCelsius ? 'C' : 'F'}`;
+        updateWeatherDisplay();
+      }
+
+      // Update all weather displays
+      function updateWeatherDisplay() {
+        const data = {
+          current: { weather_code: 1, temperature_2m: 14 },
+          hourly: { temperature_2m: Array(24).fill(14), weather_code: Array(24).fill(1), time: Array(24).fill(new Date()) },
+          daily: { temperature_2m_max: Array(7).fill(14), temperature_2m_min: Array(7).fill(10), weather_code: Array(7).fill(1), time: Array(7).fill(new Date()) },
+          name: 'San Francisco',
+          timezone: 'America/Los_Angeles'
+        };
+        updateCurrentWeather(data);
+        updateHourlyForecast(data, 'today-forecast');
+        updateHourlyForecast(data, 'tomorrow-forecast', true);
+        updateWeeklyForecast(data);
+        updateHourlyChart(data);
+        updateDailyChart(data);
+      }
+
+      // Handle search input
+      document.getElementById('search-input').addEventListener('keypress', async (e) => {
+        if (e.key === 'Enter' && e.target.value.trim()) {
+          const data = await fetchWeather(e.target.value.trim());
+          if (data) {
+            updateCurrentWeather(data);
+            updateHourlyForecast(data, 'today-forecast');
+            updateHourlyForecast(data, 'tomorrow-forecast', true);
+            updateWeeklyForecast(data);
+            updateHourlyChart(data);
+            updateDailyChart(data);
+            switchTab('today');
+            switchPage('home');
+          }
+        }
+      });
+
+      // Handle weather tab switching
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          switchTab(tab.dataset.tab);
+        });
+      });
+
+      function switchTab(tabName) {
+        document.querySelectorAll('.tab').forEach(t => {
+          t.classList.remove('active');
+          t.style.backgroundColor = '#293138';
+        });
+        document.querySelectorAll('.forecast-section').forEach(s => s.classList.add('hidden'));
+        
+        const activeTab = document.querySelector(`.tab[data-tab="${tabName}"]`);
+        activeTab.classList.add('active');
+        activeTab.style.backgroundColor = '#4b5e68';
+        document.getElementById(`${tabName}-forecast`).classList.remove('hidden');
+      }
+
+      // Handle chart tab switching
+      document.querySelectorAll('.chart-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          switchChartTab(tab.dataset.chartTab);
+        });
+      });
+
+      function switchChartTab(tabName) {
+        document.querySelectorAll('.chart-tab').forEach(t => {
+          t.classList.remove('active');
+          t.style.backgroundColor = '#293138';
+        });
+        document.querySelectorAll('.chart-section').forEach(s => s.classList.add('hidden'));
+        
+        const activeTab = document.querySelector(`.chart-tab[data-chart-tab="${tabName}"]`);
+        activeTab.classList.add('active');
+        activeTab.style.backgroundColor = '#4b5e68';
+        document.getElementById(`${tabName}-chart-container`).classList.remove('hidden');
+      }
+
+      // Handle navigation
+      document.querySelectorAll('.nav-link').forEach(link => {
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          switchPage(link.dataset.page);
+        });
+      });
+
+      function switchPage(page) {
+        document.querySelectorAll('.nav-link').forEach(l => {
+          l.classList.remove('active');
+          l.querySelector('p').classList.add('text-[#9dacb8]');
+          l.querySelector('div').classList.add('text-[#9dacb8]');
+          l.querySelector('p').classList.remove('text-white');
+          l.querySelector('div').classList.remove('text-white');
+        });
+        const activeLink = document.querySelector(`.nav-link[data-page="${page}"]`);
+        activeLink.classList.add('active');
+        activeLink.querySelector('p').classList.remove('text-[#9dacb8]');
+        activeLink.querySelector('div').classList.remove('text-[#9dacb8]');
+        activeLink.querySelector('p').classList.add('text-white');
+        activeLink.querySelector('div').classList.add('text-white');
+
+        document.getElementById('weather-screen').classList.add('hidden');
+        document.getElementById('charts-screen').classList.add('hidden');
+        if (page === 'home') {
+          document.getElementById('weather-screen').classList.remove('hidden');
+        } else if (page === 'charts') {
+          document.getElementById('charts-screen').classList.remove('hidden');
+          switchChartTab('hourly');
+        } else if (page === 'settings') {
+          console.log('Settings page not implemented');
+        }
+      }
+
+      // Initialize with current location
+      async function init() {
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(async (position) => {
+            const data = await fetchWeatherByLocation(position.coords.latitude, position.coords.longitude);
+            if (data) {
+              updateCurrentWeather(data);
+              updateHourlyForecast(data, 'today-forecast');
+              updateHourlyForecast(data, 'tomorrow-forecast', true);
+              updateWeeklyForecast(data);
+              updateHourlyChart(data);
+              updateDailyChart(data);
+            } else {
+              // Fallback if fetch fails
+              const fallbackData = await fetchWeather('San Francisco');
+              if (fallbackData) {
+                updateCurrentWeather(fallbackData);
+                updateHourlyForecast(fallbackData, 'today-forecast');
+                updateHourlyForecast(fallbackData, 'tomorrow-forecast', true);
+                updateWeeklyForecast(fallbackData);
+                updateHourlyChart(fallbackData);
+                updateDailyChart(fallbackData);
+              }
+            }
+          }, async () => {
+            showError('Geolocation access denied. Using default location.');
+            const data = await fetchWeather('San Francisco');
+            if (data) {
+              updateCurrentWeather(data);
+              updateHourlyForecast(data, 'today-forecast');
+              updateHourlyForecast(data, 'tomorrow-forecast', true);
+              updateWeeklyForecast(data);
+              updateHourlyChart(data);
+              updateDailyChart(data);
+            }
+          });
+        } else {
+          showError('Geolocation not supported. Using default location.');
+          const data = await fetchWeather('San Francisco');
+          if (data) {
+            updateCurrentWeather(data);
+            updateHourlyForecast(data, 'today-forecast');
+            updateHourlyForecast(data, 'tomorrow-forecast', true);
+            updateWeeklyForecast(data);
+            updateHourlyChart(data);
+            updateDailyChart(data);
+          }
+        }
+      }
+
+      init();
+    </script>
+  </body>
+</html>
